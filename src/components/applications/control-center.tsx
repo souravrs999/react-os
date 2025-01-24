@@ -28,8 +28,11 @@ const CONTROL_CENTER_DIMENSIONS: WindowDimensions = {
   height: 600,
 };
 const CONTROL_CENTER_COORDINATES: WindowCoordinates = {
-  x: (getViewportDimensions().width - CONTROL_CENTER_DIMENSIONS.width) / 2,
-  y: (getViewportDimensions().height - CONTROL_CENTER_DIMENSIONS.height) / 2,
+  x:
+    getViewportDimensions().width * 0.5 - CONTROL_CENTER_DIMENSIONS.width * 0.5,
+  y:
+    getViewportDimensions().height * 0.5 -
+    CONTROL_CENTER_DIMENSIONS.height * 0.5,
 };
 
 type ControlCenterLauncherProps = HTMLAttributes<HTMLDivElement> & {

@@ -32,6 +32,7 @@ export interface WindowPreview {
 }
 
 export interface WindowEventCallbacks {
+  onWindowFocus?: (window: IWindow) => void;
   onWindowDragStop?: (Window: IWindow, data: DraggableData) => void;
   onWindowMaximize?: (window: IWindow) => void;
   onWindowMinimize?: (window: IWindow) => void;
@@ -61,11 +62,14 @@ export interface IWindow
   visibility?: "visible" | "hidden";
   dragAxis?: "x" | "y" | "both" | "none";
   created?: number;
+  zIndex?: number;
 }
 
 export interface WindowState {
   activeWindows: IWindow[];
+  currMaxZIdx: number;
 
+  focusWindow: (window: IWindow) => void;
   maximizeWindow: (window: IWindow) => void;
   minimizeWindow: (window: IWindow) => void;
   addToActiveWindows: (window: IWindow) => void;
@@ -85,10 +89,12 @@ export const createWindowSlice: StateCreator<RootState, [], [], WindowState> = (
   set
 ) => ({
   activeWindows: [],
+  currMaxZIdx: 1,
   addToActiveWindows: (window: IWindow) =>
     set((state) => {
       window.created = new Date().getTime();
       window.instanceCount = 0;
+      window.zIndex = 1;
 
       const existingWindow = state.activeWindows
         .slice()
@@ -158,6 +164,19 @@ export const createWindowSlice: StateCreator<RootState, [], [], WindowState> = (
       );
       if (win) {
         win.minimized = false;
+      }
+      return state;
+    }),
+  focusWindow: (window: IWindow) =>
+    set((state) => {
+      const win = state.activeWindows.find(
+        (w) => w.id === window.id && w.instanceCount === window.instanceCount
+      );
+      if (win) {
+        if ((win.zIndex ?? 1) <= state.currMaxZIdx) {
+          win.zIndex = state.currMaxZIdx + 1;
+          state.currMaxZIdx++;
+        }
       }
       return state;
     }),

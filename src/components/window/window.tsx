@@ -3,6 +3,7 @@ import useWindowPreview from "@/hooks/use-window-preview";
 import { cn, getViewportDimensions } from "@/lib/utils";
 import { useRootStore } from "@/store";
 import { IWindow } from "@/store/slices/window";
+import { motion } from "framer-motion";
 import {
   FC,
   memo,
@@ -41,6 +42,7 @@ const Window: FC<WindowProps> = (props) => {
   const {
     dock: { height: dockHeight },
     setWindowPreview,
+    currMaxZIdx,
   } = useRootStore((state) => state);
 
   const [windowState, setWindowState] = useState<IWindow>({
@@ -57,9 +59,7 @@ const Window: FC<WindowProps> = (props) => {
         x: d.x,
         y: d.y,
       }));
-      if (windowState?.onWindowDragStop) {
-        windowState.onWindowDragStop(windowState, d);
-      }
+      windowState.onWindowDragStop?.(windowState, d);
     },
     [windowState]
   );
@@ -82,6 +82,14 @@ const Window: FC<WindowProps> = (props) => {
     },
     []
   );
+
+  const handleWindowFocus = useCallback(() => {
+    setWindowState((prevState) => ({
+      ...prevState,
+      zIndex: currMaxZIdx + 1,
+    }));
+    windowState.onWindowFocus?.(windowState);
+  }, [windowState, currMaxZIdx]);
 
   useEffect(() => {
     if (props.generatePreview) {
@@ -118,68 +126,90 @@ const Window: FC<WindowProps> = (props) => {
       onDragStop={handleDragStop}
       onResizeStop={handleResizeStop}
       dragHandleClassName={GLOBAL_DRAG_HANDLE_CLASSNAME}
+      onMouseDown={handleWindowFocus}
       enableResizing={resizable}
-      className={cn("pointer-events-auto")}
-      style={{
-        willChange: "transform",
-      }}
+      className={cn("pointer-events-auto will-change-transform")}
+      style={{ zIndex: windowState.zIndex ?? 1 }}
     >
-      <div
+      <motion.div
         ref={windowRef}
+        variants={{
+          initial: { opacity: 0, scale: 0 },
+          animate: { opacity: 1, scale: 1 },
+          exit: { opacity: 0, scale: 0 },
+        }}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        transition={{
+          duration: 0.3,
+          type: "spring",
+          damping: 20,
+          stiffness: 120,
+        }}
         className="flex flex-col h-full w-full rounded-xl overflow-hidden bg-background/20 dark:bg-background/50 backdrop-blur-2xl border border-border/20"
       >
         <div
           className={cn(
-            "flex gap-2 [&_button]:size-3 [&_button]:rounded-full p-2 cursor-move",
+            "flex items-center justify-between p-2 cursor-move",
+
             GLOBAL_DRAG_HANDLE_CLASSNAME,
             {
               hidden: !showTitleBar,
             }
           )}
         >
-          <button
-            onClick={() => {
-              if (windowState?.onWindowMaximize) {
-                setWindowState({
-                  ...windowState,
-                  maximized: true,
-                  minimized: false,
-                  width: getViewportDimensions().width - 8,
-                  height: getViewportDimensions().height - dockHeight,
-                  x: 0,
-                  y: 0,
-                });
-                windowState.onWindowMaximize(windowState);
-              }
-            }}
-            className="bg-green-500"
-          />
-          <button
-            onClick={() => {
-              if (windowState?.onWindowMinimize) {
-                setWindowState({
-                  ...windowState,
-                  minimized: true,
-                  maximized: false,
-                });
-                windowState.onWindowMinimize(windowState);
-              }
-            }}
-            className="bg-yellow-500"
-          />
-          <button
-            onClick={() => {
-              if (windowState?.onWindowClose) {
-                windowState.onWindowClose(windowState);
-              }
-            }}
-            className="bg-red-500"
-          />
+          <div
+            className={cn(
+              "inline-flex gap-2 [&_button]:size-3 [&_button]:rounded-full"
+            )}
+          >
+            <button
+              onClick={() => {
+                if (windowState?.onWindowMaximize) {
+                  setWindowState({
+                    ...windowState,
+                    maximized: true,
+                    minimized: false,
+                    width: getViewportDimensions().width - 8,
+                    height: getViewportDimensions().height - dockHeight,
+                    x: 0,
+                    y: 0,
+                  });
+                  windowState.onWindowMaximize(windowState);
+                }
+              }}
+              className="bg-green-500"
+            />
+            <button
+              onClick={() => {
+                if (windowState?.onWindowMinimize) {
+                  setWindowState({
+                    ...windowState,
+                    minimized: true,
+                    maximized: false,
+                  });
+                  windowState.onWindowMinimize(windowState);
+                }
+              }}
+              className="bg-yellow-500"
+            />
+            <button
+              onClick={() => {
+                if (windowState?.onWindowClose) {
+                  windowState.onWindowClose(windowState);
+                }
+              }}
+              className="bg-red-500"
+            />
+          </div>
+          {/* <p className="font-bold text-sm">{windowState.title}</p>
+          <span /> */}
         </div>
         <div ref={previewRef} className="flex-1 overflow-auto">
           {children}
         </div>
-      </div>
+      </motion.div>
     </Rnd>
   );
 };

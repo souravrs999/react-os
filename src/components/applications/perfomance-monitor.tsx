@@ -81,6 +81,7 @@ const usePerformanceMonitorWindow = () => {
     updateWindowCoordinates,
     maximizeWindow,
     minimizeWindow,
+    focusWindow,
   } = useRootStore((state) => state);
 
   const addPerformanceMonitorToWindowStack = () => {
@@ -96,6 +97,7 @@ const usePerformanceMonitorWindow = () => {
         updateWindowCoordinates(window, { x: data.x, y: data.y }),
       onWindowMaximize: (window) => maximizeWindow(window),
       onWindowMinimize: (window) => minimizeWindow(window),
+      onWindowFocus: (window) => focusWindow(window),
     } as IWindow);
   };
 
@@ -167,7 +169,7 @@ const DockPerformanceMonitorLauncher: FC<
           />
         </TooltipTrigger>
         <TooltipContent>
-          <p>Perfomance Monitor</p>
+          <p>Performance Monitor</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

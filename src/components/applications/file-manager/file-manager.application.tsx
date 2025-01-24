@@ -17,11 +17,24 @@ import {
   FileText,
   Wifi,
 } from "lucide-react";
-import { HTMLAttributes, FC, memo } from "react";
+import { HTMLAttributes, FC, memo, useState, useEffect } from "react";
 import Image from "next/image";
+import { FileSystemItem, getAttribute } from "@/lib/fs";
 
 type FileManagerApplicationProps = HTMLAttributes<HTMLDivElement> & {};
 const FileManagerApplication: FC<FileManagerApplicationProps> = memo(() => {
+  const [files, setFiles] = useState<FileSystemItem[]>([]);
+
+  const loadFiles = async () => {
+    const res = await getAttribute();
+    setFiles(res as FileSystemItem[]);
+  };
+  console.log(files);
+
+  useEffect(() => {
+    loadFiles();
+  }, []);
+
   return (
     <div className="backdrop-blur-md bg-background/80 size-full overflow-auto scrollbar-thin">
       <div className="flex flex-col size-full">

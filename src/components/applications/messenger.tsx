@@ -41,6 +41,7 @@ const useMessengerWindow = () => {
     updateWindowCoordinates,
     maximizeWindow,
     minimizeWindow,
+    focusWindow,
   } = useRootStore((state) => state);
 
   const addMessengerToWindowStack = () => {
@@ -56,6 +57,7 @@ const useMessengerWindow = () => {
         updateWindowCoordinates(window, { x: data.x, y: data.y }),
       onWindowMaximize: (window) => maximizeWindow(window),
       onWindowMinimize: (window) => minimizeWindow(window),
+      onWindowFocus: (window) => focusWindow(window),
     } as IWindow);
   };
 
